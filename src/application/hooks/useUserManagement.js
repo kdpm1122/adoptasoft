@@ -1,0 +1,37 @@
+// src/application/hooks/useUserManagement.js
+import { useState, useCallback } from "react";
+import { validateNewUserForm } from "../../domain/services/userValidation";
+import { userRepository } from "../../infrastructure/repositories/userRepository";
+
+const initialForm = { fullName: "", email: "", role: "", phone: "", document: "" };
+
+export function useUserManagement(initialUsers = []) {
+  const [users, setUsers] = useState(initialUsers);
+  const [formData, setFormData] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const setField = useCallback((field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const createUser = useCallback(async () => {
+    const { isValid, errors: validationErrors } = validateNewUserForm(formData);
+    setErrors(validationErrors);
+    if (!isValid) return { success: false };
+
+    setIsLoading(true);
+    try {
+      const newUser = await userRepository.create(formData);
+      setUsers((prev) => [newUser, ...prev]);
+      setFormData(initialForm);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData]);
+
+  return { users, formData, setField, errors, isLoading, createUser };
+}
