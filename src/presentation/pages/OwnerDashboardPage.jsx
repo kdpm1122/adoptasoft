@@ -6,6 +6,7 @@ import { QuickAccessCard } from "../components/ui/QuickAccessCard";
 import { PetsSection } from "../components/sections/PetsSection";
 import { AppointmentsSection } from "../components/sections/AppointmentsSection";
 import { MedicalHistorySection } from "../components/sections/MedicalHistorySection";
+import { ProfileSection } from "../components/sections/ProfileSection";
 import { OWNER_NAV } from "../../shared/constants/navigation";
 import { Pet, PET_STATUS } from "../../domain/entities/Pet";
 import { petRepository } from "../../infrastructure/repositories/petRepository";
@@ -14,26 +15,15 @@ import { appointmentRepository } from "../../infrastructure/repositories/appoint
 import { medicalRecordRepository } from "../../infrastructure/repositories/medicalRecordRepository";
 import { exportToPdf, exportToWord } from "../../shared/utils/exportHistory";
 
-// Convierte un registro tal como lo devuelve la API (description/treatment/weight)
-// al formato que espera <MedicalRecordItem> (title/doctor/detail).
 function toRecordViewModel(r) {
   const detailParts = [];
   if (r.weight) detailParts.push(`Peso: ${r.weight} kg`);
   if (r.treatment) detailParts.push(`Tratamiento: ${r.treatment}`);
-  return {
-    id: r.id,
-    type: r.type,
-    title: r.description,
-    doctor: r.vetName,
-    date: r.date,
-    nextDate: r.nextDate,
-    detail: detailParts.join(" — ") || null,
-  };
+  return { id: r.id, type: r.type, title: r.description, doctor: r.vetName, date: r.date, nextDate: r.nextDate, detail: detailParts.join(" — ") || null };
 }
 
-export function OwnerDashboardPage({ onLogout }) {
+export function OwnerDashboardPage({ onLogout, currentUser }) {
   const [activeNav, setActiveNav] = useState("inicio");
-
   const [pets, setPets] = useState([]);
   const [vets, setVets] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -41,19 +31,12 @@ export function OwnerDashboardPage({ onLogout }) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  // Carga inicial: mascotas, veterinarios (para el selector) y citas.
   useEffect(() => {
     let cancelled = false;
-
     async function loadData() {
-      setIsLoading(true);
-      setLoadError(null);
+      setIsLoading(true); setLoadError(null);
       try {
-        const [petsData, vetsData, appointmentsData] = await Promise.all([
-          petRepository.list(),
-          vetRepository.list(),
-          appointmentRepository.list(),
-        ]);
+        const [petsData, vetsData, appointmentsData] = await Promise.all([petRepository.list(), vetRepository.list(), appointmentRepository.list()]);
         if (cancelled) return;
         setPets(petsData.map((p) => new Pet(p)));
         setVets(vetsData);
@@ -64,31 +47,15 @@ export function OwnerDashboardPage({ onLogout }) {
         if (!cancelled) setIsLoading(false);
       }
     }
-
     loadData();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  // El historial médico se consulta por mascota; mostramos el de la primera
-  // mascota registrada, igual que hacía la versión con datos de ejemplo.
   useEffect(() => {
     if (!pets[0]?.id) return;
     let cancelled = false;
-
-    medicalRecordRepository
-      .list(pets[0].id)
-      .then((data) => {
-        if (!cancelled) setRecords(data.map(toRecordViewModel));
-      })
-      .catch((err) => {
-        if (!cancelled) setLoadError(err.message);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    medicalRecordRepository.list(pets[0].id).then((data) => { if (!cancelled) setRecords(data.map(toRecordViewModel)); }).catch((err) => { if (!cancelled) setLoadError(err.message); });
+    return () => { cancelled = true; };
   }, [pets]);
 
   async function handleCreatePet(petData) {
@@ -100,26 +67,14 @@ export function OwnerDashboardPage({ onLogout }) {
     const created = await appointmentRepository.create(formData);
     const pet = pets.find((p) => String(p.id) === String(formData.petId));
     const vet = vets.find((v) => String(v.id) === String(formData.vetId));
-    setAppointments((prev) => [
-      { ...created, petName: pet?.name || "Mascota", vetName: vet?.name || "Por asignar" },
-      ...prev,
-    ]);
+    setAppointments((prev) => [{ ...created, petName: pet?.name || "Mascota", vetName: vet?.name || "Por asignar" }, ...prev]);
   }
 
   function renderSection() {
     switch (activeNav) {
-      case "mascotas":
-        return <PetsSection pets={pets} onCreatePet={handleCreatePet} />;
-      case "citas":
-        return (
-          <AppointmentsSection
-            pets={pets}
-            vets={vets}
-            appointments={appointments}
-            takenSlots={appointments.map((a) => a.time)}
-            onConfirm={handleConfirmAppointment}
-          />
-        );
+      case "mascotas": return <PetsSection pets={pets} onCreatePet={handleCreatePet} />;
+      case "citas": return <AppointmentsSection pets={pets} vets={vets} appointments={appointments} takenSlots={appointments.map((a) => a.time)} onConfirm={handleConfirmAppointment} />;
+      case "perfil": return <ProfileSection user={currentUser} />;
       case "historial":
         return (
           <MedicalHistorySection
@@ -127,14 +82,7 @@ export function OwnerDashboardPage({ onLogout }) {
             records={records}
             onExportPdf={() => exportToPdf(`${pets[0]?.name || "mascota"} — ${pets[0]?.breed || ""}`, records)}
             onExportWord={() => exportToWord(`${pets[0]?.name || "mascota"} — ${pets[0]?.breed || ""}`, records)}
-            onShare={() => {
-              if (navigator.share) {
-                navigator.share({ title: `Historial de ${pets[0]?.name}`, text: "Historial médico generado desde Adoptasoft." });
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert("Enlace copiado al portapapeles.");
-              }
-            }}
+            onShare={() => { if (navigator.share) { navigator.share({ title: `Historial de ${pets[0]?.name}`, text: "Historial médico generado desde Adoptasoft." }); } else { navigator.clipboard.writeText(window.location.href); alert("Enlace copiado al portapapeles."); } }}
           />
         );
       default:
@@ -154,57 +102,29 @@ export function OwnerDashboardPage({ onLogout }) {
 
   if (isLoading) {
     return (
-      <DashboardLayout
-        subtitle="Gestión de Mascotas"
-        roleLabel="Dueño"
-        roleIcon="🐶"
-        navItems={OWNER_NAV}
-        activeNav={activeNav}
-        onNavigate={setActiveNav}
-        onLogout={onLogout}
-      >
+      <DashboardLayout subtitle="Gestión de Mascotas" roleLabel="Dueño" roleIcon="🐶" navItems={OWNER_NAV} activeNav={activeNav} onNavigate={setActiveNav} onLogout={onLogout}>
         <p className="text-text-muted">Cargando datos...</p>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout
-      subtitle="Gestión de Mascotas"
-      roleLabel="Dueño"
-      roleIcon="🐶"
-      navItems={OWNER_NAV}
-      activeNav={activeNav}
-      onNavigate={setActiveNav}
-      onLogout={onLogout}
-    >
-      {loadError && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          No se pudieron cargar los datos: {loadError}
-        </div>
-      )}
-
+    <DashboardLayout subtitle="Gestión de Mascotas" roleLabel="Dueño" roleIcon="🐶" navItems={OWNER_NAV} activeNav={activeNav} onNavigate={setActiveNav} onLogout={onLogout}>
+      {loadError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">No se pudieron cargar los datos: {loadError}</div>}
       {activeNav === "inicio" && (
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-text-dark">🏠 Inicio</h1>
-            <p className="text-text-muted">Resumen de tus mascotas y citas</p>
+        <>
+          <div className="mb-6 flex items-center justify-between">
+            <div><h1 className="text-2xl font-bold text-text-dark">🏠 Inicio</h1><p className="text-text-muted">Resumen de tus mascotas y citas</p></div>
+            <button onClick={() => setActiveNav("citas")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-dark">+ Nueva Cita</button>
           </div>
-          <button onClick={() => setActiveNav("citas")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-primary-dark">
-            + Nueva Cita
-          </button>
-        </div>
+          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <StatCard value={pets.length} label="Mis Mascotas" accent="orange" />
+            <StatCard value={appointments.length} label="Cita Próxima" accent="yellow" />
+            <StatCard value={pets.filter((p) => p.status === PET_STATUS.ACTIVE).length} label="Vacunas al día" accent="green" />
+            <StatCard value={2} label="Vacunas Pendientes" accent="blue" />
+          </div>
+        </>
       )}
-
-      {activeNav === "inicio" && (
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <StatCard value={pets.length} label="Mis Mascotas" accent="orange" />
-          <StatCard value={appointments.length} label="Cita Próxima" accent="yellow" />
-          <StatCard value={pets.filter((p) => p.status === PET_STATUS.ACTIVE).length} label="Vacunas al día" accent="green" />
-          <StatCard value={2} label="Vacunas Pendientes" accent="blue" />
-        </div>
-      )}
-
       {renderSection()}
     </DashboardLayout>
   );

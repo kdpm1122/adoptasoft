@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { validateNewUserForm } from "../../domain/services/userValidation";
 import { userRepository } from "../../infrastructure/repositories/userRepository";
 
-const initialForm = { fullName: "", email: "", role: "", phone: "", document: "" };
+const initialForm = { fullName: "", email: "", role: "", phone: "", document: "", password: "" };
 
 export function useUserManagement(initialUsers = []) {
   const [users, setUsers] = useState(initialUsers);
@@ -19,7 +19,6 @@ export function useUserManagement(initialUsers = []) {
     const { isValid, errors: validationErrors } = validateNewUserForm(formData);
     setErrors(validationErrors);
     if (!isValid) return { success: false };
-
     setIsLoading(true);
     try {
       const newUser = await userRepository.create(formData);

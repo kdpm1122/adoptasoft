@@ -1,10 +1,10 @@
 // src/shared/constants/navigation.js
-
 export const OWNER_NAV = [
   { key: "inicio", label: "Inicio", icon: "🏠" },
   { key: "mascotas", label: "Mis Mascotas", icon: "🐾" },
   { key: "citas", label: "Citas", icon: "📋" },
   { key: "historial", label: "Historial", icon: "🗒️" },
+  { key: "perfil", label: "Mi Perfil", icon: "👤" },
 ];
 
 export const VET_NAV = [
@@ -12,10 +12,12 @@ export const VET_NAV = [
   { key: "agenda", label: "Mi Agenda", icon: "📅" },
   { key: "pacientes", label: "Pacientes", icon: "🐾" },
   { key: "registrar", label: "Registrar Consulta", icon: "📋" },
+  { key: "perfil", label: "Mi Perfil", icon: "👤" },
 ];
 
 export const ADMIN_NAV = [
   { key: "inicio", label: "Inicio", icon: "🏠" },
   { key: "usuarios", label: "Usuarios", icon: "👥" },
   { key: "veterinarios", label: "Veterinarios", icon: "🩺" },
+  { key: "perfil", label: "Mi Perfil", icon: "👤" },
 ];

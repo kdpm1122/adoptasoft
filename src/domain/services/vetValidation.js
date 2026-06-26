@@ -1,15 +1,11 @@
 // src/domain/services/vetValidation.js
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function validateVetForm({ name, email, specialty, clinic }) {
+export function validateVetForm({ name, email, specialty, clinic, password }) {
   const errors = {
     name: !name?.trim() ? "El nombre es obligatorio." : null,
-    email: !email?.trim()
-      ? "El correo es obligatorio."
-      : !EMAIL_REGEX.test(email)
-      ? "El correo no es válido."
-      : null,
+    email: !email?.trim() ? "El correo es obligatorio." : !EMAIL_REGEX.test(email) ? "El correo no es válido." : null,
+    password: !password?.trim() ? "La contraseña es obligatoria." : password.length < 6 ? "Mínimo 6 caracteres." : null,
     specialty: !specialty ? "Selecciona una especialidad." : null,
     clinic: !clinic?.trim() ? "La clínica es obligatoria." : null,
   };

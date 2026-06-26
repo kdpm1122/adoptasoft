@@ -10,28 +10,17 @@ import { authRepository } from "./infrastructure/repositories/authRepository";
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
-  function handleLoginSuccess(user) {
-    setCurrentUser(user);
-  }
+  function handleLoginSuccess(user) { setCurrentUser(user); }
 
   function handleLogout() {
     authRepository.logout();
     setCurrentUser(null);
   }
 
-  if (!currentUser) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  if (currentUser.role === ROLES.VET) {
-    return <VetDashboardPage doctorName={currentUser.name} onLogout={handleLogout} />;
-  }
-
-  if (currentUser.role === ROLES.ADMIN) {
-    return <AdminDashboardPage onLogout={handleLogout} />;
-  }
-
-  return <OwnerDashboardPage onLogout={handleLogout} />;
+  if (!currentUser) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  if (currentUser.role === ROLES.VET) return <VetDashboardPage doctorName={currentUser.name} currentUser={currentUser} onLogout={handleLogout} />;
+  if (currentUser.role === ROLES.ADMIN) return <AdminDashboardPage currentUser={currentUser} onLogout={handleLogout} />;
+  return <OwnerDashboardPage currentUser={currentUser} onLogout={handleLogout} />;
 }
 
 export default App;
