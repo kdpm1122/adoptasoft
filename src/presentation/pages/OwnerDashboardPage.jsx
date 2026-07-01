@@ -6,6 +6,7 @@ import { QuickAccessCard } from "../components/ui/QuickAccessCard";
 import { PetsSection } from "../components/sections/PetsSection";
 import { AppointmentsSection } from "../components/sections/AppointmentsSection";
 import { MedicalHistorySection } from "../components/sections/MedicalHistorySection";
+import { MessagesSection } from "../components/sections/MessagesSection";
 import { ProfileSection } from "../components/sections/ProfileSection";
 import { OWNER_NAV } from "../../shared/constants/navigation";
 import { Pet, PET_STATUS } from "../../domain/entities/Pet";
@@ -75,6 +76,8 @@ export function OwnerDashboardPage({ onLogout, currentUser }) {
       case "mascotas": return <PetsSection pets={pets} onCreatePet={handleCreatePet} />;
       case "citas": return <AppointmentsSection pets={pets} vets={vets} appointments={appointments} takenSlots={appointments.map((a) => a.time)} onConfirm={handleConfirmAppointment} />;
       case "perfil": return <ProfileSection user={currentUser} />;
+      case "mensajes":
+        return <MessagesSection contacts={vets.map((v) => ({ id: v.id, name: v.name, role: "vet" }))} />;
       case "historial":
         return (
           <MedicalHistorySection
@@ -93,7 +96,7 @@ export function OwnerDashboardPage({ onLogout, currentUser }) {
               <QuickAccessCard icon="🐾" title="Mis Mascotas" description="Gestiona tus animales" onClick={() => setActiveNav("mascotas")} />
               <QuickAccessCard icon="📅" title="Agendar Cita" description="Selecciona turno disponible" highlighted onClick={() => setActiveNav("citas")} />
               <QuickAccessCard icon="📋" title="Historial Médico" description="Vacunas y diagnósticos" onClick={() => setActiveNav("historial")} />
-              <QuickAccessCard icon="💬" title="Chat con Veterinario" description="Consultas en línea" badge={3} />
+              <QuickAccessCard icon="💬" title="Chat con Veterinario" description="Consultas en línea" onClick={() => setActiveNav("mensajes")} />
             </div>
           </>
         );

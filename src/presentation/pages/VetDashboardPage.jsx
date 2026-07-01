@@ -5,6 +5,7 @@ import { StatCard } from "../components/ui/StatCard";
 import { QuickAccessCard } from "../components/ui/QuickAccessCard";
 import { PatientsSection } from "../components/sections/PatientsSection";
 import { RegisterConsultSection } from "../components/sections/RegisterConsultSection";
+import { MessagesSection } from "../components/sections/MessagesSection";
 import { ProfileSection } from "../components/sections/ProfileSection";
 import { VET_NAV } from "../../shared/constants/navigation";
 import { PET_STATUS } from "../../domain/entities/Pet";
@@ -31,7 +32,7 @@ export function VetDashboardPage({ doctorName = "Dr.", onLogout, currentUser }) 
       try {
         const [petsData, appointmentsData] = await Promise.all([petRepository.list(), appointmentRepository.list()]);
         if (cancelled) return;
-        setPatients(petsData.map((p) => ({ id: p.id, name: p.name, species: p.species, breed: p.breed, ownerName: p.ownerName, status: p.status })));
+        setPatients(petsData.map((p) => ({ id: p.id, name: p.name, species: p.species, breed: p.breed, ownerId: p.ownerId, ownerName: p.ownerName, status: p.status })));
         setAppointments(appointmentsData);
       } catch (err) {
         if (!cancelled) setLoadError(err.message);
@@ -72,6 +73,12 @@ export function VetDashboardPage({ doctorName = "Dr.", onLogout, currentUser }) 
     switch (activeNav) {
       case "perfil": return <ProfileSection user={currentUser} />;
       case "pacientes": return <PatientsSection patients={patients} onChangeStatus={handleChangeStatus} onViewHistory={handleViewHistory} />;
+      case "mensajes": {
+        const uniqueOwners = Array.from(
+          new Map(patients.filter((p) => p.ownerId).map((p) => [p.ownerId, p])).values()
+        ).map((p) => ({ id: p.ownerId, name: p.ownerName, role: "owner" }));
+        return <MessagesSection contacts={uniqueOwners} />;
+      }
       case "registrar":
         return <RegisterConsultSection patients={patients} selectedPatientId={selectedPatientId} onPatientChange={setSelectedPatientId} records={records} onSave={handleSaveRecord} onCancel={() => setSelectedPatientId("")} />;
       case "agenda":
@@ -130,7 +137,8 @@ export function VetDashboardPage({ doctorName = "Dr.", onLogout, currentUser }) 
             <QuickAccessCard icon="📅" title="Mi Agenda" description="Citas del día" highlighted onClick={() => setActiveNav("agenda")} />
             <QuickAccessCard icon="🐾" title="Mis Pacientes" description="Historial y registros" onClick={() => setActiveNav("pacientes")} />
             <QuickAccessCard icon="📋" title="Registrar Consulta" description="Diagnóstico y vacunas" onClick={() => setActiveNav("registrar")} />
-            <QuickAccessCard icon="📊" title="Reportes" description="Estadísticas de pacientes" />
+            <QuickAccessCard icon="💬" title="Mensajes" description="Consultas de dueños" onClick={() => setActiveNav("mensajes")} />
+              <QuickAccessCard icon="📊" title="Reportes" description="Estadísticas de pacientes" />
           </div>
         </>
       )}

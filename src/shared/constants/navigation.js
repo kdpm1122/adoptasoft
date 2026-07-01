@@ -4,6 +4,7 @@ export const OWNER_NAV = [
   { key: "mascotas", label: "Mis Mascotas", icon: "🐾" },
   { key: "citas", label: "Citas", icon: "📋" },
   { key: "historial", label: "Historial", icon: "🗒️" },
+  { key: "mensajes", label: "Mensajes", icon: "💬" },
   { key: "perfil", label: "Mi Perfil", icon: "👤" },
 ];
 
@@ -12,6 +13,7 @@ export const VET_NAV = [
   { key: "agenda", label: "Mi Agenda", icon: "📅" },
   { key: "pacientes", label: "Pacientes", icon: "🐾" },
   { key: "registrar", label: "Registrar Consulta", icon: "📋" },
+  { key: "mensajes", label: "Mensajes", icon: "💬" },
   { key: "perfil", label: "Mi Perfil", icon: "👤" },
 ];
 
