@@ -2,8 +2,8 @@
 import { httpClient } from "../api/httpClient";
 
 export const userRepository = {
-  list: () => httpClient.get("/usuarios/listar.php").then((data) => data.users),
-  create: (payload) => httpClient.post("/usuarios/crear.php", payload),
-  remove: (id) => httpClient.delete(`/usuarios/eliminar.php?id=${id}`),
-  changePassword: (payload) => httpClient.post("/usuarios/cambiar_password.php", payload),
+  list: () => httpClient.get("/usuarios/listar").then((data) => data.users),
+  create: (payload) => httpClient.post("/usuarios/crear", payload),
+  remove: (id) => httpClient.delete(`/usuarios/eliminar?id=${id}`),
+  changePassword: (payload) => httpClient.post("/usuarios/cambiar_password", payload),
 };
