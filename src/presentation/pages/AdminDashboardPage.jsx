@@ -6,16 +6,21 @@ import { QuickAccessCard } from "../components/ui/QuickAccessCard";
 import { ProfileSection } from "../components/sections/ProfileSection";
 import { CreateUserForm } from "../components/forms/CreateUserForm";
 import { VeterinariansSection } from "../components/sections/VeterinariansSection";
+import { ReportsSection } from "../components/sections/ReportsSection";
 import { ADMIN_NAV } from "../../shared/constants/navigation";
 import { ROLES } from "../../domain/entities/User";
 import { Veterinarian } from "../../domain/entities/Veterinarian";
 import { userRepository } from "../../infrastructure/repositories/userRepository";
 import { vetRepository } from "../../infrastructure/repositories/vetRepository";
+import { petRepository } from "../../infrastructure/repositories/petRepository";
+import { appointmentRepository } from "../../infrastructure/repositories/appointmentRepository";
 
 export function AdminDashboardPage({ onLogout, currentUser }) {
   const [activeNav, setActiveNav] = useState("inicio");
   const [users, setUsers] = useState([]);
   const [vets, setVets] = useState([]);
+  const [pets, setPets] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -24,10 +29,12 @@ export function AdminDashboardPage({ onLogout, currentUser }) {
     async function loadData() {
       setIsLoading(true); setLoadError(null);
       try {
-        const [usersData, vetsData] = await Promise.all([userRepository.list(), vetRepository.list()]);
+        const [usersData, vetsData, petsData, appointmentsData] = await Promise.all([userRepository.list(), vetRepository.list(), petRepository.list(), appointmentRepository.list()]);
         if (cancelled) return;
         setUsers(usersData);
         setVets(vetsData.map((v) => new Veterinarian(v)));
+        setPets(petsData);
+        setAppointments(appointmentsData);
       } catch (err) {
         if (!cancelled) setLoadError(err.message);
       } finally {
@@ -59,6 +66,8 @@ export function AdminDashboardPage({ onLogout, currentUser }) {
         );
       case "veterinarios":
         return <VeterinariansSection vets={vets} onCreateVet={handleCreateVet} />;
+      case "reportes":
+        return <ReportsSection pets={pets} appointments={appointments} vets={vets} />;
       case "perfil":
         return <ProfileSection user={currentUser} />;
       default:
@@ -95,7 +104,7 @@ export function AdminDashboardPage({ onLogout, currentUser }) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <QuickAccessCard icon="👥" title="Gestión de Usuarios" description="Crear, editar, suspender" highlighted onClick={() => setActiveNav("usuarios")} />
             <QuickAccessCard icon="🩺" title="Veterinarios" description="Gestionar especialistas" onClick={() => setActiveNav("veterinarios")} />
-            <QuickAccessCard icon="📊" title="Reportes Globales" description="Estadísticas del sistema" />
+            <QuickAccessCard icon="📊" title="Reportes Globales" description="Estadísticas del sistema" onClick={() => setActiveNav("reportes")} />
             <QuickAccessCard icon="⚙️" title="Configuración" description="Sistema y seguridad" />
             <QuickAccessCard icon="🔔" title="Notificaciones del Sistema" description="Alertas y avisos" badge={3} />
           </div>
